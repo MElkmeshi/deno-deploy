@@ -1,5 +1,11 @@
 import { Context } from "@oak/oak";
-import { latLngToCell, cellToLatLng, gridDisk, gridDistance } from "npm:h3-js";
+import {
+  latLngToCell,
+  cellToLatLng,
+  gridDisk,
+  gridDistance,
+  cellToBoundary,
+} from "npm:h3-js";
 
 export class H3Controller {
   static geoToH3(ctx: Context) {
@@ -76,6 +82,24 @@ export class H3Controller {
 
       const [lat, lng] = cellToLatLng(h3);
       ctx.response.body = { geo: [lat, lng] };
+    } catch (error) {
+      ctx.response.status = 500;
+      ctx.response.body = { error };
+    }
+  }
+  static h3CellToBoundary(ctx: Context) {
+    try {
+      const url = new URL(ctx.request.url);
+      const h3 = url.searchParams.get("h3") || "";
+
+      if (!h3) {
+        ctx.response.status = 400;
+        ctx.response.body = { error: "Missing h3 index" };
+        return;
+      }
+
+      const boundary = cellToBoundary(h3, true);
+      ctx.response.body = { boundary };
     } catch (error) {
       ctx.response.status = 500;
       ctx.response.body = { error };
